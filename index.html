@@ -5,76 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zahlenzauber</title>
 <style>
-:root{--bg1:#5b3fd1;--bg2:#b44fd6;--card:#fff;--ink:#2d2250;--gold:#ffc83d;--ok:#2fbf71;--bad:#ff6b6b;--mint:#3ed6c3}
+:root{--navy:#0b2a6b;--blue:#1f6fd1;--bar:#3d84d6;--green:#2f9e44;--ok:#2fbf71;--bad:#ff6b6b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;font-family:"Trebuchet MS","Comic Sans MS",system-ui,sans-serif;color:var(--ink);
-background:radial-gradient(circle at 20% 10%,#7d5cf0 0,transparent 40%),linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed}
-body:before{content:"✦ ✧ ✦   ✧ ✦ ✧";position:fixed;inset:0;font-size:28px;color:#ffffff30;letter-spacing:60px;line-height:120px;overflow:hidden;pointer-events:none;word-break:break-all}
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;flex:none}
-.logo{display:flex;align-items:center;gap:10px;color:#fff;font-size:26px;font-weight:900;cursor:pointer;text-shadow:0 3px 0 #0003}
-.logo svg{width:44px;height:44px}
-.top{display:flex;gap:10px}
-.ib{width:50px;height:50px;border-radius:50%;border:0;background:#fff;font-size:24px;cursor:pointer;box-shadow:0 5px 0 #0003;transition:transform .1s}
-.ib:active,.big:active,.opt:active{transform:translateY(4px);box-shadow:none}
-main{max-width:720px;margin:0 auto;padding:8px 16px 40px;position:relative}
-.view{display:none;animation:pop .35s}.view.on{display:block}
-@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}}
-.card{background:var(--card);border-radius:28px;padding:20px;box-shadow:0 8px 0 #0003;margin-bottom:18px}
-.hello{display:flex;align-items:center;gap:14px}
-.hello svg{width:110px;height:110px;flex:none;animation:bob 3s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(-8px) rotate(-3deg)}}
-.bubble{background:#f4efff;border-radius:20px;padding:12px 16px;font-size:19px;font-weight:700;position:relative}
-h2{margin:0 0 12px;font-size:26px}
-.big{display:flex;align-items:center;gap:16px;width:100%;border:0;border-radius:24px;padding:18px 20px;margin-bottom:14px;color:#fff;font:inherit;font-size:26px;font-weight:900;cursor:pointer;text-align:left;box-shadow:0 7px 0 #0003}
-.big small{display:block;font-size:15px;font-weight:600;opacity:.9}
-.big .sym{font-size:44px;background:#fff3;border-radius:18px;width:84px;text-align:center;padding:4px 0;flex:none}
-.b1{background:linear-gradient(135deg,#ff9a3d,#ff5f6d)}.b2{background:linear-gradient(135deg,#27c4b4,#2d8cf0)}
-.prog{height:16px;background:#e8e0ff;border-radius:99px;overflow:hidden;margin-bottom:16px}
-.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),#ff8f3d);transition:width .4s}
-.q{font-size:clamp(54px,16vw,96px);font-weight:900;text-align:center;margin:10px 0 18px}
-.q span{color:#7d5cf0}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.opt{border:0;border-radius:22px;padding:22px 0;font:inherit;font-size:44px;font-weight:900;background:#efe9ff;color:var(--ink);cursor:pointer;box-shadow:0 6px 0 #c9bdf2}
-.opt.ok{background:var(--ok);color:#fff;box-shadow:0 6px 0 #1b8f52}.opt.bad{background:var(--bad);color:#fff;box-shadow:0 6px 0 #c24444;animation:shake .4s}
-@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-.msg{min-height:38px;text-align:center;font-size:22px;font-weight:800;margin-top:14px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-weight:700}
-.link{border:0;background:none;font:inherit;font-weight:800;color:#7d5cf0;cursor:pointer;font-size:17px}
-.stars{font-size:54px;text-align:center;letter-spacing:6px}
-.btn{border:0;border-radius:18px;padding:14px 22px;font:inherit;font-size:20px;font-weight:900;color:#fff;background:linear-gradient(135deg,#7d5cf0,#b44fd6);cursor:pointer;box-shadow:0 5px 0 #0003;margin:6px 6px 0 0}
-.btn.alt{background:#ff6b6b}
-.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-bottom:18px}
-.stat div{background:#f4efff;border-radius:18px;padding:12px 4px}.stat b{display:block;font-size:30px}.stat span{font-size:14px;font-weight:700}
-.bar{height:20px;border-radius:99px;background:#ffd5d5;overflow:hidden;margin:4px 0 14px}.bar i{display:block;height:100%;background:var(--ok)}
-label.f{display:block;font-weight:800;margin:14px 0 6px}
-input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border:3px solid #e1d8ff;border-radius:16px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:3px solid #e1d8ff;background:#fff;border-radius:99px;padding:8px 16px;font:inherit;font-size:19px;font-weight:800;cursor:pointer}
-.chip.on{background:#7d5cf0;border-color:#7d5cf0;color:#fff}
+body{margin:0;height:100vh;height:100dvh;background:#8cc7f0;font-family:"Nunito","Trebuchet MS",system-ui,sans-serif;color:var(--navy)}
+#app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:linear-gradient(#bfe6fb,#e6f5ff 70%);overflow:hidden}
+.top{flex:none;display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--bar);border-bottom:3px solid #2f6fb9;color:#fff;font-size:22px;font-weight:800;min-height:68px}
+.top.clear{background:none;border:0}.top b{flex:1;text-align:center}
+.bk{border:0;background:none;color:#fff;font-size:32px;width:44px;cursor:pointer}.top.clear .bk{visibility:hidden}
+.rt{min-width:44px;display:flex;justify-content:flex-end}#hb{display:none;gap:8px}.cnt{font-size:20px;white-space:nowrap}
+.ib{width:46px;height:46px;border-radius:50%;border:0;background:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 0 #0003}
+.scroll{flex:1;overflow-y:auto;padding:14px 16px 30px}
+.view{display:none;animation:pop .3s}.view.on{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+.card{background:#fff;border-radius:24px;padding:18px;box-shadow:0 6px 0 #b9dcf5;margin-bottom:16px}
+.hero{text-align:center;padding:6px 4px 0}.hero h1{font-size:46px;margin:0;letter-spacing:-1px}.hero .st{font-size:46px}
+.hero p{font-size:19px;font-weight:700;margin:8px 0 18px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pick{border:0;border-radius:26px;padding:16px 6px;color:#fff;font:inherit;font-size:26px;font-weight:900;cursor:pointer;box-shadow:0 7px 0 #0003}
+.pick small{display:block;font-size:13px;font-weight:700;margin-top:2px}.pick:active,.btn:active,.hold:active{transform:translateY(4px);box-shadow:none}
+.b1{background:linear-gradient(#3b8fe8,#1f6fd1)}.b2{background:linear-gradient(#4cc15f,#2f9e44)}
+.ico{display:block;white-space:nowrap;font-size:clamp(34px,10vw,54px);line-height:1.2}
+.grass{position:relative;height:150px;margin:12px -20px 0;background:radial-gradient(120% 140% at 25% 135%,#7fcf6a 0 55%,transparent 56%),radial-gradient(90% 120% at 95% 140%,#5fbf5a 0 55%,transparent 56%)}
+.grass svg{position:absolute;right:26px;bottom:18px;width:112px;height:112px}.grass i{position:absolute;left:26px;bottom:26px;font-size:42px;font-style:normal}
+.q{font-size:clamp(56px,19vw,104px);font-weight:900;text-align:center;padding:26px 0;background:#fff;border-radius:26px;box-shadow:0 6px 0 #b9dcf5}.q span{color:var(--blue)}
+.msg{min-height:40px;text-align:center;font-size:24px;font-weight:900;margin:14px 0 8px}
+.hold{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;border:0;border-radius:99px;padding:20px;font:inherit;font-size:24px;font-weight:900;color:#fff;background:linear-gradient(#4cc15f,#2f9e44);box-shadow:0 6px 0 #23772f;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer}
+.hold.on{background:linear-gradient(#ffa24d,#ff6b2c);box-shadow:0 6px 0 #c24d17;animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 6px 0 #c24d17,0 0 0 16px #ff8f3d44}}
+.cap{margin-top:14px;background:#ffffffb0;border-radius:18px;padding:12px;text-align:center;font-size:17px;font-weight:700;color:#1b4b8f;min-height:50px}
+.link{display:block;margin:12px auto 0;border:0;background:none;font:inherit;font-weight:800;color:var(--blue);cursor:pointer;font-size:18px}
+.done{background:#fff4d6;border:3px solid #f6c453;border-radius:26px;padding:22px;text-align:center}
+.done .st{font-size:84px}.done h2{margin:0 0 6px;font-size:32px}.done p{font-size:19px;font-weight:700}.stars{font-size:44px;letter-spacing:6px}
+.btn{display:block;width:100%;border:0;border-radius:99px;padding:16px;margin-top:12px;font:inherit;font-size:21px;font-weight:900;color:#fff;background:linear-gradient(#3b8fe8,#1f6fd1);box-shadow:0 5px 0 #14509c;cursor:pointer}
+.btn.out{background:#fff;color:var(--blue);border:3px solid var(--blue);box-shadow:none}.btn.red{background:#ff6b6b;box-shadow:0 5px 0 #c24444}
+.pill{display:inline-block;background:#7a63d8;color:#fff;border-radius:99px;padding:4px 16px;font-weight:800;margin-bottom:12px}
+.lil{background:#efeafd;border:3px solid #cfc3f5;border-radius:24px;padding:16px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-bottom:16px}
+.stat div{border-radius:16px;padding:10px 2px}.stat div:nth-child(1){background:#fde9a8}.stat div:nth-child(2){background:#bfeabd}.stat div:nth-child(3){background:#bfe1f8}
+.stat b{display:block;font-size:30px}.stat span{font-size:14px;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:6px}
+.pbar{height:18px;border-radius:99px;background:#ffd5d5;overflow:hidden;margin-bottom:14px}.pbar i{display:block;height:100%;background:var(--ok)}
+label.f{display:block;font-weight:800;margin:16px 0 8px}
+input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border:3px solid #cfe3f6;border-radius:14px;color:var(--navy)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{--c:#f7a6a6;min-width:60px;border:0;border-radius:14px;padding:12px 18px;font:inherit;font-size:22px;font-weight:900;color:var(--navy);background:var(--c);opacity:.45;cursor:pointer}
+.chip.on{opacity:1;box-shadow:0 4px 0 #0003}.chip:nth-child(2){--c:#f9d56e}.chip:nth-child(3){--c:#9ddc9a}.chip:nth-child(4){--c:#8fd0f3}
 .confetti{position:fixed;top:-20px;font-size:28px;pointer-events:none;z-index:9;animation:fall 1.8s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
-.scroll{flex:1;overflow-y:auto;position:relative;-webkit-overflow-scrolling:touch}
-.tt{display:flex;align-items:center;gap:14px;font-size:26px;font-weight:900;margin-bottom:14px}.tt small{display:block;font-size:15px;font-weight:600;opacity:.7}
-.tt .sym{font-size:34px;background:#f4efff;border-radius:16px;padding:6px 12px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.pick{border:0;border-radius:24px;padding:18px 8px;color:#fff;font:inherit;font-size:26px;font-weight:900;cursor:pointer;box-shadow:0 7px 0 #0003}
-.pick small{display:block;font-size:13px;font-weight:600;margin-top:2px}.pick:active{transform:translateY(4px);box-shadow:none}
-.ico{display:block;white-space:nowrap;font-size:clamp(34px,10vw,56px);line-height:1.2}
-.mic{display:block;margin:6px auto 0;width:96px;height:96px;border-radius:50%;border:0;background:#efe9ff;font-size:44px;cursor:pointer;box-shadow:0 6px 0 #c9bdf2}
-.mic.on{background:var(--ok);animation:pulse 1.2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 18px #2fbf7133}}
-.heard{min-height:24px;text-align:center;font-size:16px;font-weight:700;opacity:.7;margin-top:10px}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo" onclick="go('home')"><svg viewBox="0 0 100 100"><use href="#fox"/></svg>Zahlenzauber</div>
-  <div class="top">
-    <button class="ib" onclick="go('stats')" title="Statistik" aria-label="Statistik">📊</button>
-    <button class="ib" onclick="go('settings')" title="Einstellungen" aria-label="Einstellungen">⚙️</button>
-  </div>
-</header>
-
 <svg width="0" height="0" style="position:absolute"><defs>
 <symbol id="fox" viewBox="0 0 100 100">
   <path d="M14 20 L34 38 L18 52Z" fill="#ff8f3d"/><path d="M86 20 L66 38 L82 52Z" fill="#ff8f3d"/>
@@ -89,62 +69,43 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
   <path d="M24 30 L50 -2 L76 30 Q50 22 24 30Z" fill="#5b3fd1"/><path d="M20 31 Q50 20 80 31 Q50 38 20 31Z" fill="#7d5cf0"/>
   <path d="M50 8 l2.5 6 6 .5-4.6 4 1.5 6-5.4-3.4-5.4 3.4 1.5-6-4.6-4 6-.5Z" fill="#ffc83d" transform="translate(0 3) scale(.9) translate(5.5 0)"/>
 </symbol></defs></svg>
-
-<div class="scroll" id="sc"><main>
+<div id="app">
+<div class="top clear" id="top">
+  <button class="bk" onclick="go('home')" aria-label="Zurück">←</button><b id="bt"></b>
+  <span class="rt"><span id="hb"><button class="ib" onclick="go('stats')" aria-label="Statistik">📊</button><button class="ib" onclick="go('settings')" aria-label="Einstellungen">⚙️</button></span><span class="cnt" id="cnt"></span></span>
+</div>
+<div class="scroll" id="sc">
 <section class="view on" id="home">
-  <div class="card hello">
-    <svg viewBox="0 0 100 100"><use href="#fox"/></svg>
-    <div class="bubble" id="greet"></div>
-  </div>
-  <div class="card">
-    <div class="tt"><span class="sym">1+1</span><span>Plus-Zauber<small>Sag mir die Lösung laut!</small></span></div>
+  <div class="hero"><div class="st">⭐</div><h1>Zahlenzauber</h1><p id="greet"></p>
     <div class="two">
       <button class="pick b1" onclick="start('eyes')"><span class="ico">👀</span>Sehen<small>Aufgabe wird gezeigt</small></button>
       <button class="pick b2" onclick="start('ears')"><span class="ico">👂👂</span>Hören<small>Aufgabe wird vorgelesen</small></button>
     </div>
+    <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
 </section>
-
 <section class="view" id="ex">
-  <div class="card">
-    <div class="row"><button class="link" onclick="go('home')">← Zurück</button><span id="cnt"></span></div>
-    <div class="prog"><i id="pb"></i></div>
-    <div class="q" id="q"></div>
-    <button class="link" id="rep" style="display:none;margin:0 auto 6px" onclick="replay()">🔊 Nochmal hören</button>
-    <button class="mic" id="mic" onclick="micTap()" aria-label="Sprechen">🎤</button>
-    <div class="heard" id="heard"></div>
-    <button class="link" id="tab" style="display:none;margin:0 auto" onclick="window.open(location.href,'_blank')">↗ In neuem Tab öffnen</button>
-    <div class="msg" id="msg"></div>
-  </div>
+  <div class="q" id="q"></div>
+  <div class="msg" id="msg"></div>
+  <button class="hold" id="mic" onpointerdown="startHold(event)" onpointerup="endHold()" onpointercancel="endHold()" oncontextmenu="return false"><span>🎤</span><span id="mt">Halten &amp; sprechen</span></button>
+  <button class="link" id="rep" style="display:none" onclick="replay()">🔊 Nochmal hören</button>
+  <div class="cap" id="heard"></div>
+  <button class="link" id="tab" style="display:none" onclick="window.open(location.href,'_blank')">↗ In neuem Tab öffnen</button>
 </section>
-
-<section class="view" id="done">
-  <div class="card" style="text-align:center">
-    <svg viewBox="0 0 100 100" width="120" height="120"><use href="#fox"/></svg>
-    <h2 id="dt"></h2><div class="stars" id="ds"></div>
-    <p id="dp" style="font-size:20px;font-weight:700"></p>
-    <button class="btn" id="again">Nochmal zaubern</button><button class="btn alt" onclick="go('home')">Zur Startseite</button>
-  </div>
-</section>
-
-<section class="view" id="stats">
-  <div class="card"><h2>📊 Meine Statistik</h2>
-    <div class="stat"><div><b id="sS">0</b><span>Sterne</span></div><div><b id="sR">0</b><span>Runden</span></div><div><b id="sB">0</b><span>beste Serie</span></div></div>
-    <div id="sList"></div>
-    <button class="btn alt" onclick="resetStats()">Statistik löschen</button>
-  </div>
-</section>
-
-<section class="view" id="settings">
-  <div class="card"><h2>⚙️ Einstellungen</h2>
-    <label class="f">Wie heißt du?</label><input type="text" id="sName" maxlength="20" placeholder="Name">
-    <label class="f">Zahlenraum bis …</label><div class="chips" id="sAdd"></div>
-    <label class="f">Aufgaben pro Runde</label><div class="chips" id="sLen"></div>
-    <label class="f">Töne bei richtig/falsch</label><div class="chips" id="sSnd"></div>
-  </div>
-</section>
-</main></div>
-
+<section class="view" id="done"><div class="done">
+  <div class="st">⭐</div><h2>Runde geschafft!</h2><div class="stars" id="ds"></div><p id="dp"></p>
+  <button class="btn" id="again">↻ Runde neu starten</button><button class="btn out" onclick="go('home')">🏠 Zurück zum Start</button>
+</div></section>
+<section class="view" id="stats"><div class="lil"><span class="pill">So läuft's</span>
+  <div class="stat"><div><b id="sS">0</b><span>Sterne</span></div><div><b id="sR">0</b><span>Runden</span></div><div><b id="sB">0</b><span>beste Serie</span></div></div>
+  <div id="sList"></div><button class="btn red" onclick="resetStats()">Statistik löschen</button></div></section>
+<section class="view" id="settings"><div class="card">
+  <label class="f" style="margin-top:0">Wie heißt du?</label><input type="text" id="sName" maxlength="20" placeholder="Name">
+  <label class="f">Zahlenraum bis …</label><div class="chips" id="sAdd"></div>
+  <label class="f">Aufgaben pro Runde</label><div class="chips" id="sLen"></div>
+  <label class="f">Töne bei richtig/falsch</label><div class="chips" id="sSnd"></div>
+</div></section>
+</div></div>
 <script>
 const $=id=>document.getElementById(id);
 const DEF={name:'',addMax:10,len:10,sound:true};
@@ -164,45 +125,48 @@ function wnum(w){if(has(ON,w))return ON[w];if(has(TE,w))return TE[w];const k=w.i
 function nums(t){t=t.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/\s+und\s+/g,'und');
   const r=(t.match(/\d+/g)||[]).map(Number);t.split(/[^a-z]+/).forEach(w=>{if(!w)return;const n=wnum(w);if(n!==null)r.push(n)});return r}
 
-/* Navigation */
-let tok=0,rec=null,adv=null,lock=false;
-function stopAll(){tok++;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}$('mic').classList.remove('on')}
-function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$(v).classList.add('on');
-  if(v==='home')greet();if(v==='stats')renderStats();if(v==='settings')renderSet();$('sc').scrollTop=0}
-function greet(){$('greet').textContent=(S.name?`Hallo ${S.name}! `:'Hallo! ')+'Ich bin Fibi, der Zauberfuchs. Wollen wir mit den Augen oder mit den Ohren zaubern?'}
 
-/* Sprache */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function speak(t,cb){const sy=window.speechSynthesis;if(!sy||!window.SpeechSynthesisUtterance){cb&&cb();return}
   sy.cancel();const u=new SpeechSynthesisUtterance(t),vs=sy.getVoices();u.lang='de-DE';u.rate=.9;u.pitch=1.15;
   const v=vs.find(x=>x.lang.replace('_','-')==='de-DE')||vs.find(x=>x.lang.startsWith('de'));if(v)u.voice=v;
   let d=false;const f=()=>{if(!d){d=true;cb&&cb()}};u.onend=f;u.onerror=f;setTimeout(f,7000);sy.speak(u)}
-function say(){stopAll();const my=tok;$('heard').textContent='';speak(`${cur.x} plus ${cur.y}`,()=>{if(my===tok)listen()})}
-function replay(){if(!lock)say()}
-function listen(){if(!SR||lock)return;try{rec&&rec.abort()}catch(e){}
-  const my=++tok;let got=false;rec=new SR();rec.lang='de-DE';rec.maxAlternatives=5;
-  rec.onstart=()=>{if(my===tok)$('mic').classList.add('on')};
-  rec.onresult=e=>{if(my!==tok||got)return;got=true;judge([...e.results[0]].map(a=>a.transcript))};
-  rec.onerror=e=>{if(['not-allowed','service-not-allowed','audio-capture','network'].includes(e.error)){got=true;
-    if(e.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.';else{micOK=false;warn()}}};
-  rec.onend=()=>{if(my!==tok)return;$('mic').classList.remove('on');if(!got&&!lock)setTimeout(()=>{if(my===tok)listen()},300)};
-  try{rec.start()}catch(e){}}
 
-/* Runde */
-let mode,i,ok,streak,cur;
-const FRAMED=window.self!==window.top;let micOK=null;
+let tok=0,rec=null,adv=null,lock=false,holding=false,heardAll=[],mode,i,ok,streak,cur,micOK=null;
+const FRAMED=window.self!==window.top,TITLES={stats:'Meine Statistik',settings:'Einstellungen',done:'Geschafft!'};
 async function askMic(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());return true}catch(e){return false}}
-function warn(){$('heard').textContent=!window.isSecureContext?'Chrome erlaubt das Mikrofon nur auf https-Webseiten, nicht bei lokal geöffneten Dateien.':FRAMED?'Das Mikrofon ist in diesem Fenster gesperrt. Bitte die App in einem neuen Tab öffnen.':'Bitte erlaube das Mikrofon (Schloss-Symbol neben der Adresse) und tippe dann auf 🎤.';$('tab').style.display=FRAMED?'block':'none'}
-function micTap(){if(lock)return;askMic().then(g=>{micOK=g;if(g){$('heard').textContent='';$('tab').style.display='none';listen()}else warn()})}
+function warn(){$('heard').textContent=!window.isSecureContext?'Chrome erlaubt das Mikrofon nur auf https-Webseiten, nicht bei lokal geöffneten Dateien.':FRAMED?'Das Mikrofon ist in diesem Fenster gesperrt. Bitte die App in einem neuen Tab öffnen.':'Bitte erlaube das Mikrofon (Schloss-Symbol neben der Adresse) und halte dann den Knopf gedrückt.';$('tab').style.display=FRAMED?'block':'none'}
+function micState(on){$('mic').classList.toggle('on',on);$('mt').textContent=on?'Ich höre zu …':'Halten & sprechen'}
+function stopAll(){tok++;holding=false;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}micState(false)}
+function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$(v).classList.add('on');
+  const h=v==='home';$('top').className='top'+(h?' clear':'');$('bt').textContent=h?'':v==='ex'?'Runde '+(ST.rounds+1):TITLES[v];
+  $('hb').style.display=h?'flex':'none';$('cnt').style.display=v==='ex'?'block':'none';
+  if(h)greet();if(v==='stats')renderStats();if(v==='settings')renderSet();$('sc').scrollTop=0}
+function greet(){$('greet').innerHTML=(S.name?`Hallo ${S.name}!<br>`:'')+'Aus Zahlen wird Zauberei.<br>Rechne mit und werde immer besser!'}
+function say(){stopAll();speak(`${cur.x} plus ${cur.y}`)}
+function replay(){if(!lock&&!holding)say()}
+function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  if(lock||holding)return;
+  if(!SR){$('heard').textContent='Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';return}
+  if(micOK===false){warn();askMic().then(g=>{micOK=g;if(g)$('heard').textContent='Jetzt den Knopf gedrückt halten und sprechen!'});return}
+  try{speechSynthesis.cancel()}catch(_){}
+  holding=true;heardAll=[];const my=++tok;rec=new SR();rec.lang='de-DE';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;
+  rec.onaudiostart=()=>{if(my===tok){micState(true);$('heard').textContent='Jetzt sprechen! 🎙️'}};
+  rec.onresult=ev=>{if(my===tok)heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript))};
+  rec.onerror=ev=>{if(my!==tok)return;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
+  rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);
+    if(heardAll.length)judge(heardAll);else if(micOK!==false&&!/Internet/.test($('heard').textContent))$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'};
+  try{rec.start()}catch(_){holding=false}}
+function endHold(){if(!holding)return;const my=tok;setTimeout(()=>{try{rec.stop()}catch(_){}},400);
+  setTimeout(()=>{if(my===tok&&holding){holding=false;try{rec.abort()}catch(_){}micState(false)}},6000)}
 function start(m){mode=m;i=0;ok=0;streak=0;go('ex');askMic().then(g=>{micOK=g;if($('ex').classList.contains('on'))next()})}
 function next(){lock=false;if(i>=S.len)return finish();
   const m=S.addMax,a=R(1,m-1),b=R(1,m-a);cur={x:a,y:b,a:a+b};
-  $('cnt').textContent=`${i+1} von ${S.len}`;$('pb').style.width=(i/S.len*100)+'%';$('msg').textContent='';$('heard').textContent='';
-  $('tab').style.display='none';const ears=mode==='ears';$('rep').style.display=ears?'block':'none';
+  $('cnt').textContent=`⭐ ${i+1}/${S.len}`;$('msg').textContent='';$('tab').style.display='none';
+  const ears=mode==='ears';$('rep').style.display=ears?'block':'none';
   $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;
-  if(!SR){$('heard').textContent='Dieser Browser kann nicht zuhören. Bitte Chrome, Edge oder Safari benutzen.';return}
-  if(micOK===false){warn();return}
-  ears?say():listen()}
+  $('heard').textContent=SR?'Halte den Knopf gedrückt, warte bis er orange leuchtet, dann sag die Lösung.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';
+  if(micOK===false)warn();if(ears)say()}
 function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(cur.a));
   $('heard').textContent='Ich habe gehört: „'+alts[0]+'“';
   $('q').innerHTML=`${cur.x} <span>+</span> ${cur.y} <span>=</span> ${cur.a}`;
@@ -211,22 +175,19 @@ function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(c
   save();adv=setTimeout(()=>{i++;next()},2300)}
 function finish(){
   const p=ok/S.len,st=p>=.9?3:p>=.6?2:1;ST.rounds++;ST.stars+=st;save();
-  $('dt').textContent=(S.name?S.name+', ':'')+'das war magisch!';$('ds').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);
-  $('dp').textContent=`${ok} von ${S.len} richtig.`;$('again').onclick=()=>start(mode);go('done');
+  $('ds').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);$('dp').textContent=`${S.name?S.name+', du':'Du'} hast ${ok} von ${S.len} Aufgaben richtig gelöst.`;
+  $('again').onclick=()=>start(mode);go('done');
   for(let c=0;c<24;c++){const e=document.createElement('div');e.className='confetti';e.textContent=['⭐','✨','🎉','🪄'][R(0,3)];e.style.left=R(0,95)+'vw';e.style.animationDelay=(Math.random()*.8)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),3000)}}
-
-/* Statistik */
 function renderStats(){$('sS').textContent=ST.stars;$('sR').textContent=ST.rounds;$('sB').textContent=ST.best;
-  const row=(n,o)=>{const t=o.r+o.w,p=t?Math.round(o.r/t*100):0;return `<div class="row"><span>${n}</span><span>${o.r} richtig · ${o.w} falsch</span></div><div class="bar"><i style="width:${p}%"></i></div>`};
+  const row=(n,o)=>{const t=o.r+o.w,p=t?Math.round(o.r/t*100):0;return `<div class="row"><span>${n}</span><span>${o.r} richtig · ${o.w} falsch</span></div><div class="pbar"><i style="width:${p}%"></i></div>`};
   $('sList').innerHTML=row('👀 Sehen',ST.eyes)+row('👂 Hören',ST.ears)}
 function resetStats(){if(confirm('Statistik wirklich löschen?')){ST=ZERO();save();renderStats()}}
-
-/* Einstellungen */
 function chips(el,items,isOn,click){$(el).innerHTML='';items.forEach(([l,v])=>{const b=document.createElement('button');b.className='chip'+(isOn(v)?' on':'');b.textContent=l;b.onclick=()=>{click(v);save();renderSet()};$(el).appendChild(b)})}
 function renderSet(){$('sName').value=S.name;
   chips('sAdd',[[10,10],[20,20],[100,100]],v=>S.addMax===v,v=>S.addMax=v);
   chips('sLen',[[5,5],[10,10],[15,15]],v=>S.len===v,v=>S.len=v);
   chips('sSnd',[['🔊 an',true],['🔇 aus',false]],v=>S.sound===v,v=>S.sound=v)}
+
 $('sName').oninput=e=>{S.name=e.target.value.trim();save()};
 greet();
 </script>
