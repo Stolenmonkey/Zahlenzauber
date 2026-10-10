@@ -87,7 +87,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
 <section class="view" id="ex">
   <div class="q" id="q"></div>
   <div class="msg" id="msg"></div>
-  <button class="hold" id="mic" onpointerdown="startHold(event)" onpointerup="endHold()" onpointercancel="endHold()" oncontextmenu="return false"><span>🎤</span><span id="mt">Halten &amp; sprechen</span></button>
+  <button class="hold" id="mic" onpointerdown="startHold(event)" onpointerup="endHold()" oncontextmenu="return false"><span>🎤</span><span id="mt">Halten &amp; sprechen</span></button>
   <button class="link" id="rep" style="display:none" onclick="replay()">🔊 Nochmal hören</button>
   <div class="cap" id="heard"></div>
   <button class="link" id="tab" style="display:none" onclick="window.open(location.href,'_blank')">↗ In neuem Tab öffnen</button>
@@ -145,19 +145,24 @@ function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classLi
 function greet(){$('greet').innerHTML=(S.name?`Hallo ${S.name}!<br>`:'')+'Aus Zahlen wird Zauberei.<br>Rechne mit und werde immer besser!'}
 function say(){stopAll();speak(`${cur.x} plus ${cur.y}`)}
 function replay(){if(!lock&&!holding)say()}
-function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
-  if(lock||holding)return;
-  if(!SR){$('heard').textContent='Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';return}
-  if(micOK===false){warn();askMic().then(g=>{micOK=g;if(g)$('heard').textContent='Jetzt den Knopf gedrückt halten und sprechen!'});return}
+let pressed=false,retries=0,lastErr='';
+function listenNow(){
   try{speechSynthesis.cancel()}catch(_){}
-  holding=true;heardAll=[];const my=++tok;rec=new SR();rec.lang='de-DE';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;
+  holding=true;heardAll=[];lastErr='';const my=++tok;rec=new SR();rec.lang='de-DE';rec.interimResults=true;rec.maxAlternatives=3;
   rec.onaudiostart=()=>{if(my===tok){micState(true);$('heard').textContent='Jetzt sprechen! 🎙️'}};
   rec.onresult=ev=>{if(my===tok)heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript))};
-  rec.onerror=ev=>{if(my!==tok)return;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
-  rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);
-    if(heardAll.length)judge(heardAll);else if(micOK!==false&&!/Internet/.test($('heard').textContent))$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'};
+  rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
+  rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);const h=heardAll.filter(t=>t.trim());
+    if(h.length){if(h.some(t=>nums(t).length))judge(h);else $('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
+    if(pressed&&micOK!==false&&lastErr!=='network'&&retries++<3){listenNow();return}
+    if(micOK!==false&&lastErr!=='network')$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'+(lastErr?` (${lastErr})`:'')};
   try{rec.start()}catch(_){holding=false}}
-function endHold(){if(!holding)return;const my=tok;setTimeout(()=>{try{rec.stop()}catch(_){}},400);
+function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  pressed=true;if(lock||holding)return;retries=0;
+  if(!SR){$('heard').textContent='Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';return}
+  if(micOK===false){warn();askMic().then(g=>{micOK=g;if(g)$('heard').textContent='Jetzt den Knopf gedrückt halten und sprechen!'});return}
+  listenNow()}
+function endHold(){pressed=false;if(!holding)return;const my=tok;setTimeout(()=>{if(my===tok)try{rec.stop()}catch(_){}},700);
   setTimeout(()=>{if(my===tok&&holding){holding=false;try{rec.abort()}catch(_){}micState(false)}},6000)}
 function start(m){mode=m;i=0;ok=0;streak=0;go('ex');askMic().then(g=>{micOK=g;if($('ex').classList.contains('on'))next()})}
 function next(){lock=false;if(i>=S.len)return finish();
