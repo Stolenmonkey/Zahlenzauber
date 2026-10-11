@@ -51,6 +51,8 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
 .chip{--c:#f7a6a6;min-width:60px;border:0;border-radius:14px;padding:12px 18px;font:inherit;font-size:22px;font-weight:900;color:var(--navy);background:var(--c);opacity:.45;cursor:pointer}
 .chip.on{opacity:1;box-shadow:0 4px 0 #0003}.chip:nth-child(2){--c:#f9d56e}.chip:nth-child(3){--c:#9ddc9a}.chip:nth-child(4){--c:#8fd0f3}
 .rev{position:absolute;right:14px;bottom:8px;font-size:12px;font-weight:700;color:var(--navy);opacity:.55}
+.vp{display:none;height:14px;border-radius:99px;background:#d9e8f7;overflow:hidden;margin-top:8px}.vp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cc15f,#2f9e44);transition:width .2s}.vp.ind i{width:35%;animation:ind 1.2s infinite ease-in-out}
+@keyframes ind{0%{margin-left:-35%}100%{margin-left:100%}}
 .confetti{position:fixed;top:-20px;font-size:28px;pointer-events:none;z-index:9;animation:fall 1.8s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 </style>
@@ -84,7 +86,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
-  <div class="rev">Rev. 13</div>
+  <div class="rev">Rev. 14</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
@@ -92,6 +94,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
   <button class="hold" id="mic" onpointerdown="startHold(event)" onpointerup="endHold()" oncontextmenu="return false"><span>🎤</span><span id="mt">Halten &amp; sprechen</span></button>
   <button class="link" id="rep" style="display:none" onclick="replay()">🔊 Nochmal hören</button>
   <div class="cap" id="heard"></div>
+  <div class="vp"><i></i></div>
   <button class="link" id="tab" style="display:none" onclick="window.open(location.href,'_blank')">↗ In neuem Tab öffnen</button>
 </section>
 <section class="view" id="done"><div class="done">
@@ -106,7 +109,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
   <label class="f">Zahlenraum bis …</label><div class="chips" id="sAdd"></div>
   <label class="f">Aufgaben pro Runde</label><div class="chips" id="sLen"></div>
   <label class="f">Töne bei richtig/falsch</label><div class="chips" id="sSnd"></div>
-  <label class="f">Spracherkennung</label><div class="chips" id="sEng"></div><div class="cap" id="vst" style="margin-top:10px"></div>
+  <label class="f">Spracherkennung</label><div class="chips" id="sEng"></div><div class="cap" id="vst" style="margin-top:10px"></div><div class="vp"><i></i></div>
 </div></section>
 </div></div>
 <script>
@@ -187,12 +190,32 @@ const GRAM=JSON.stringify(['null','eins','ein','zwei','zwo','drei','vier','fünf
 const MODEL_URLS=['vosk-model-small-de-0.15.tar.gz','https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-de-0.15.tar.gz'];
 let vModel=null,vLoading=null,vOn=false,vCtx=null,vStream=null,vNode=null,vRec=null,vText='',vTimer=null,vNum=null,engNote='';
 const vst=t=>{$('vst').textContent=t};
+const mb=b=>(b/1048576).toFixed(1).replace('.',',');
+function vProg(txt,done,total){vst(txt);if(txt&&$('ex').classList.contains('on'))$('heard').textContent=txt;
+  document.querySelectorAll('.vp').forEach(e=>{e.style.display=txt?'block':'none';e.classList.toggle('ind',!total);e.firstChild.style.width=total?Math.round(done/total*100)+'%':''})}
+async function vFetch(u,n){
+  let c=null;try{c=await caches.open('zz-vosk');const h=await c.match(u);if(h)return await h.blob()}catch(_){}
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),30000);let r;
+  try{r=await fetch(u,{signal:ac.signal})}catch(e){throw new Error('keine Antwort vom Server')}finally{clearTimeout(t)}
+  if(!r.ok)throw new Error('Datei nicht gefunden (HTTP '+r.status+')');
+  const tot=+r.headers.get('content-length')||0,rd=r.body.getReader(),parts=[];let got=0,last=Date.now(),stalled=false;
+  const watch=setInterval(()=>{if(Date.now()-last>30000){stalled=true;rd.cancel().catch(()=>{})}},3000);
+  try{for(;;){const{done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;last=Date.now();
+    vProg(`Lade Wortliste-Modell (${n}): ${mb(got)}${tot?' von '+mb(tot):''} MB`+(tot?` (${Math.round(got/tot*100)} %)`:''),got,tot)}}finally{clearInterval(watch)}
+  if(stalled||(tot&&got<tot))throw new Error('Download stockt oder wurde unterbrochen');
+  const b=new Blob(parts);try{c&&await c.put(u,new Response(b))}catch(_){}return b}
 function vLoad(){if(vModel)return Promise.resolve(vModel);if(vLoading)return vLoading;
-  vLoading=(async()=>{vst('Lade Spracherkennung …');
+  vLoading=(async()=>{vProg('Lade Spracherkennung …',0,0);
     if(!window.Vosk)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js';s.onload=res;s.onerror=()=>rej(new Error('Bibliothek konnte nicht geladen werden.'));document.head.appendChild(s)});
-    for(const u of MODEL_URLS){try{vst('Lade Wortliste-Modell (ca. 45 MB) …');vModel=await Vosk.createModel(new URL(u,location.href).href);vst('Wortliste bereit ✓');return vModel}catch(e){}}
-    throw new Error('Modell nicht gefunden. Lege vosk-model-small-de-0.15.tar.gz neben index.html oder wähle Chrome.')})();
-  vLoading.catch(e=>{vLoading=null;vst(e.message)});return vLoading}
+    const errs=[],names=['eigene Datei','öffentliche Kopie'];
+    for(let k=0;k<MODEL_URLS.length;k++){try{
+      const b=await vFetch(new URL(MODEL_URLS[k],location.href).href,names[k]);
+      vProg('Modell wird entpackt und gestartet … (kann etwas dauern)',0,0);
+      vModel=await Promise.race([Vosk.createModel(URL.createObjectURL(b)),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Zeitüberschreitung beim Starten')),180000))]);
+      vProg('',0,0);vst('Wortliste bereit ✓');return vModel}
+    catch(e){errs.push(names[k]+': '+e.message)}}
+    throw new Error('Modell nicht verfügbar. '+errs.join(' · ')+'. Lege vosk-model-small-de-0.15.tar.gz neben index.html oder wähle Chrome.')})();
+  vLoading.catch(e=>{vLoading=null;vProg('',0,0);vst(e.message)});return vLoading}
 function preload(){vLoad().catch(()=>{})}
 async function vMic(){if(!vNode){vStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}});
   vCtx=new(window.AudioContext||window.webkitAudioContext)();const src=vCtx.createMediaStreamSource(vStream);vNode=vCtx.createScriptProcessor(4096,1,1);
