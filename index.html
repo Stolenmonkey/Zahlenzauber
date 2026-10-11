@@ -84,7 +84,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
-  <div class="rev">Rev. 11</div>
+  <div class="rev">Rev. 13</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
@@ -106,11 +106,12 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
   <label class="f">Zahlenraum bis …</label><div class="chips" id="sAdd"></div>
   <label class="f">Aufgaben pro Runde</label><div class="chips" id="sLen"></div>
   <label class="f">Töne bei richtig/falsch</label><div class="chips" id="sSnd"></div>
+  <label class="f">Spracherkennung</label><div class="chips" id="sEng"></div><div class="cap" id="vst" style="margin-top:10px"></div>
 </div></section>
 </div></div>
 <script>
 const $=id=>document.getElementById(id);
-const DEF={name:'',addMax:10,len:10,sound:true};
+const DEF={name:'',addMax:10,len:10,sound:true,engine:'chrome'};
 const ZERO=()=>({rounds:0,stars:0,best:0,eyes:{r:0,w:0},ears:{r:0,w:0}});
 let S={...DEF},ST=ZERO();
 try{S={...DEF,...JSON.parse(localStorage.getItem('zz_set')||'{}')};ST={...ST,...JSON.parse(localStorage.getItem('zz_st')||'{}')}}catch(e){}
@@ -145,44 +146,76 @@ const FRAMED=window.self!==window.top,TITLES={stats:'Meine Statistik',settings:'
 async function askMic(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());return true}catch(e){return false}}
 function warn(){$('heard').textContent=!window.isSecureContext?'Chrome erlaubt das Mikrofon nur auf https-Webseiten, nicht bei lokal geöffneten Dateien.':FRAMED?'Das Mikrofon ist in diesem Fenster gesperrt. Bitte die App in einem neuen Tab öffnen.':'Bitte erlaube das Mikrofon (Schloss-Symbol neben der Adresse) und halte dann den Knopf gedrückt.';$('tab').style.display=FRAMED?'block':'none'}
 function micState(on){$('mic').classList.toggle('on',on);$('mt').textContent=on?'Ich höre zu …':'Halten & sprechen'}
-function stopAll(){tok++;clearTimeout(numT);holding=false;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}micState(false)}
-function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$(v).classList.add('on');
+function stopAll(){tok++;clearTimeout(numT);vDisarm();holding=false;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}micState(false)}
+function go(v){stopAll();if(v!=='ex')vMicStop();document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$(v).classList.add('on');
   const h=v==='home';$('top').className='top'+(h?' clear':'');$('bt').textContent=h?'':v==='ex'?'Runde '+(ST.rounds+1):TITLES[v];
   $('hb').style.display=h?'flex':'none';$('cnt').style.display=v==='ex'?'block':'none';
   if(h)greet();if(v==='stats')renderStats();if(v==='settings')renderSet();$('sc').scrollTop=0}
 function greet(){$('greet').innerHTML=(S.name?`Hallo ${S.name}!<br>`:'')+'Aus Zahlen wird Zauberei.<br>Rechne mit und werde immer besser!'}
 function say(){stopAll();const my=tok;speak(`${cur.x} plus ${cur.y}`,()=>{if(my===tok)setTimeout(()=>{if(my===tok)autoListen()},300)})}
 function replay(){if(!lock&&!holding)say()}
-let pressed=false,retries=0,lastErr='',autoUntil=0,autoTries=0,numT=null;
-function autoListen(){if(!SR||micOK===false||lock||holding)return;autoUntil=Date.now()+8000;autoTries=0;listenNow()}
+let pressed=false,retries=0,lastErr='',autoUntil=0,autoTries=0,numT=null,noPh=false;
+const PH=['zwei','drei','vier','fünf','sechs','sieben','acht','neun','zehn','elf','zwölf','dreizehn','vierzehn','fünfzehn','sechzehn','siebzehn','achtzehn','neunzehn','zwanzig'];
+function autoListen(){if(vOn){vArm(8000);return}if(!SR||micOK===false||lock||holding)return;autoUntil=Date.now()+8000;autoTries=0;listenNow()}
 function settle(my){if(my!==tok)return;tok++;holding=false;try{rec.abort()}catch(_){}micState(false);judge(heardAll.filter(t=>t.trim()))}
 function listenNow(){
   try{speechSynthesis.cancel()}catch(_){}
-  holding=true;heardAll=[];lastErr='';clearTimeout(numT);const my=++tok;rec=new SR();rec.lang='de-DE';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=5;
+  holding=true;heardAll=[];lastErr='';clearTimeout(numT);const my=++tok;let sp=false;rec=new SR();rec.lang='de-DE';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=5;rec.onspeechstart=()=>{sp=true};
+  if(window.SpeechRecognitionPhrase&&!noPh){try{rec.phrases=PH.map(w=>new SpeechRecognitionPhrase(w,5))}catch(_){noPh=true}}
   rec.onaudiostart=()=>{if(my===tok){micState(true);$('heard').textContent='Jetzt sprechen! 🎙️'}};
   rec.onresult=ev=>{if(my!==tok)return;heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript));const l=ev.results[ev.results.length-1][0].transcript;if(l.trim())$('heard').innerHTML=hear('Ich höre',l);
     clearTimeout(numT);if(heardAll.some(t=>nums(t).length))numT=setTimeout(()=>settle(my),1000)};
-  rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
+  rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(ev.error==='phrases-not-supported'){noPh=true;listenNow();return}if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
   rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);clearTimeout(numT);const h=heardAll.filter(t=>t.trim());
     if(h.some(t=>nums(t).length)){judge(h);return}
     if(micOK!==false&&lastErr!=='network'&&((pressed&&retries++<3)||(Date.now()<autoUntil&&autoTries++<6))){listenNow();return}
     if(h.length){$('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
+    if(sp&&micOK!==false&&lastErr!=='network'){$('heard').textContent='Ich habe etwas gehört, aber nicht verstanden. Sag es als Satz, zum Beispiel „Das ist 5“.';return}
     if(micOK!==false&&lastErr!=='network')$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'+(lastErr?` (${lastErr})`:'')};
   try{rec.start()}catch(_){holding=false}}
 function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
   pressed=true;if(lock||holding)return;retries=0;
+  if(vOn){if(vCtx)vCtx.resume();vArm(12000);return}
   if(!SR){$('heard').textContent='Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';return}
   if(micOK===false){warn();askMic().then(g=>{micOK=g;if(g)$('heard').textContent='Jetzt den Knopf gedrückt halten und sprechen!'});return}
   listenNow()}
-function endHold(){pressed=false;if(!holding)return;const my=tok;setTimeout(()=>{if(my===tok)try{rec.stop()}catch(_){}},700);
+function endHold(){pressed=false;if(vOn){const rc=vRec;if(rc)setTimeout(()=>vFinish(rc),600);return}if(!holding)return;const my=tok;setTimeout(()=>{if(my===tok)try{rec.stop()}catch(_){}},700);
   setTimeout(()=>{if(my===tok&&holding){holding=false;try{rec.abort()}catch(_){}micState(false)}},6000)}
-function start(m){mode=m;i=0;ok=0;streak=0;go('ex');askMic().then(g=>{micOK=g;if($('ex').classList.contains('on'))next()})}
+/* Wortliste (Vosk) */
+const ONES=['ein','zwei','drei','vier','fünf','sechs','sieben','acht','neun'],TENS=['zwanzig','dreißig','vierzig','fünfzig','sechzig','siebzig','achtzig','neunzig'];
+const GRAM=JSON.stringify(['null','eins','ein','zwei','zwo','drei','vier','fünf','sechs','sieben','acht','neun','zehn','elf','zwölf','dreizehn','vierzehn','fünfzehn','sechzehn','siebzehn','achtzehn','neunzehn',...TENS,'hundert','einhundert','und',...TENS.flatMap(t=>ONES.map(o=>o+'und'+t)),'[unk]']);
+const MODEL_URLS=['vosk-model-small-de-0.15.tar.gz','https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-de-0.15.tar.gz'];
+let vModel=null,vLoading=null,vOn=false,vCtx=null,vStream=null,vNode=null,vRec=null,vText='',vTimer=null,vNum=null,engNote='';
+const vst=t=>{$('vst').textContent=t};
+function vLoad(){if(vModel)return Promise.resolve(vModel);if(vLoading)return vLoading;
+  vLoading=(async()=>{vst('Lade Spracherkennung …');
+    if(!window.Vosk)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/vosk-browser@0.0.8/dist/vosk.js';s.onload=res;s.onerror=()=>rej(new Error('Bibliothek konnte nicht geladen werden.'));document.head.appendChild(s)});
+    for(const u of MODEL_URLS){try{vst('Lade Wortliste-Modell (ca. 45 MB) …');vModel=await Vosk.createModel(new URL(u,location.href).href);vst('Wortliste bereit ✓');return vModel}catch(e){}}
+    throw new Error('Modell nicht gefunden. Lege vosk-model-small-de-0.15.tar.gz neben index.html oder wähle Chrome.')})();
+  vLoading.catch(e=>{vLoading=null;vst(e.message)});return vLoading}
+function preload(){vLoad().catch(()=>{})}
+async function vMic(){if(!vNode){vStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}});
+  vCtx=new(window.AudioContext||window.webkitAudioContext)();const src=vCtx.createMediaStreamSource(vStream);vNode=vCtx.createScriptProcessor(4096,1,1);
+  vNode.onaudioprocess=e=>{if(vRec)try{vRec.acceptWaveform(e.inputBuffer)}catch(_){}};src.connect(vNode);vNode.connect(vCtx.destination)}
+  await vCtx.resume();vOn=true}
+function vMicStop(){vOn=false;vDisarm();try{vNode&&vNode.disconnect()}catch(_){}try{vStream&&vStream.getTracks().forEach(t=>t.stop())}catch(_){}try{vCtx&&vCtx.close()}catch(_){}vNode=vStream=vCtx=null}
+function vDisarm(){clearTimeout(vTimer);clearTimeout(vNum);if(vRec){try{vRec.remove()}catch(_){}vRec=null}holding=false;micState(false)}
+function vArm(ms){if(!vOn||lock)return;vDisarm();const rc=new vModel.KaldiRecognizer(vCtx.sampleRate,GRAM);vRec=rc;vText='';holding=true;micState(true);$('heard').textContent='Jetzt sprechen! 🎙️';
+  rc.on('partialresult',m=>vGot(rc,m.result.partial,false));rc.on('result',m=>vGot(rc,m.result.text,true));vTimer=setTimeout(()=>vEnd(rc),ms)}
+function vGot(rc,t,fin){if(rc!==vRec||lock||!t)return;t=t.replace(/\[unk\]/g,'').replace(/\s+/g,' ').trim();if(!t)return;vText=t;$('heard').innerHTML=hear('Ich höre',t);
+  clearTimeout(vNum);if(nums(t).length)vNum=setTimeout(()=>vSettle(rc),fin?0:800)}
+function vSettle(rc){if(rc!==vRec)return;const t=vText;vDisarm();judge([t])}
+function vEnd(rc){if(rc!==vRec)return;const t=vText;vDisarm();$('heard').textContent=t?`Ich habe „${t}“ gehört, aber keine Zahl. Versuch es nochmal!`:'Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'}
+function vFinish(rc){if(rc!==vRec)return;nums(vText).length?vSettle(rc):vEnd(rc)}
+function start(m){mode=m;i=0;ok=0;streak=0;engNote='';go('ex');askMic().then(async g=>{micOK=g;if(!$('ex').classList.contains('on'))return;
+  if(S.engine==='vosk'&&g){$('heard').textContent='Lade Wortliste … (beim ersten Mal ca. 45 MB)';try{await vLoad();await vMic()}catch(e){vOn=false;engNote='Wortliste nicht verfügbar, es wird die Chrome-Erkennung genutzt. '+(e&&e.message||'')}}
+  if(!$('ex').classList.contains('on')){vMicStop();return}next()})}
 function next(){lock=false;if(i>=S.len)return finish();
   const m=S.addMax,a=R(1,m-1),b=R(1,m-a);cur={x:a,y:b,a:a+b};
   $('cnt').textContent=`⭐ ${i+1}/${S.len}`;$('msg').textContent='';$('tab').style.display='none';
   const ears=mode==='ears';$('rep').style.display=ears?'block':'none';
   $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;
-  $('heard').textContent=SR?'Sag die Lösung, sobald der Knopf orange leuchtet. Wird nichts erkannt, halte den Knopf gedrückt.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';
+  $('heard').textContent=SR||vOn?'Sag die Lösung, sobald der Knopf orange leuchtet. Wird nichts erkannt, halte den Knopf gedrückt.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';if(engNote){$('heard').textContent=engNote;engNote=''}
   if(micOK===false)warn();if(ears)say();else autoListen()}
 const esc=t=>t.replace(/[&<>]/g,'');
 function hear(label,t){const n=nums(t);return `${label}: „${esc(t)}“`+(n.length&&!/^\s*\d+\s*$/.test(t)?` → <b>${n.join(' / ')}</b>`:'')}
@@ -205,6 +238,7 @@ function chips(el,items,isOn,click){$(el).innerHTML='';items.forEach(([l,v])=>{c
 function renderSet(){$('sName').value=S.name;
   chips('sAdd',[[10,10],[20,20],[100,100]],v=>S.addMax===v,v=>S.addMax=v);
   chips('sLen',[[5,5],[10,10],[15,15]],v=>S.len===v,v=>S.len=v);
+  chips('sEng',[['Chrome','chrome'],['Wortliste','vosk']],v=>S.engine===v,v=>{S.engine=v;if(v==='vosk')preload()});
   chips('sSnd',[['🔊 an',true],['🔇 aus',false]],v=>S.sound===v,v=>S.sound=v)}
 
 $('sName').oninput=e=>{S.name=e.target.value.trim();save()};
