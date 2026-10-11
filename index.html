@@ -28,7 +28,7 @@ body{margin:0;height:100vh;height:100dvh;background:#8cc7f0;font-family:"Nunito"
 .ico{display:block;white-space:nowrap;font-size:clamp(34px,10vw,54px);line-height:1.2}
 .grass{position:relative;height:150px;margin:12px -20px 0;background:radial-gradient(120% 140% at 25% 135%,#7fcf6a 0 55%,transparent 56%),radial-gradient(90% 120% at 95% 140%,#5fbf5a 0 55%,transparent 56%)}
 .grass svg{position:absolute;right:26px;bottom:18px;width:112px;height:112px}.grass i{position:absolute;left:26px;bottom:26px;font-size:42px;font-style:normal}
-.q{font-size:clamp(56px,19vw,104px);font-weight:900;text-align:center;padding:26px 0;background:#fff;border-radius:26px;box-shadow:0 6px 0 #b9dcf5}.q span{color:var(--blue)}
+.q{white-space:nowrap;overflow:hidden;font-size:clamp(56px,19vw,104px);font-weight:900;text-align:center;padding:26px 0;background:#fff;border-radius:26px;box-shadow:0 6px 0 #b9dcf5}.q span{color:var(--blue)}
 .msg{min-height:40px;text-align:center;font-size:24px;font-weight:900;margin:14px 0 8px}
 .hold{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;border:0;border-radius:99px;padding:20px;font:inherit;font-size:24px;font-weight:900;color:#fff;background:linear-gradient(#4cc15f,#2f9e44);box-shadow:0 6px 0 #23772f;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer}
 .hold.on{background:linear-gradient(#ffa24d,#ff6b2c);box-shadow:0 6px 0 #c24d17;animation:pulse 1s infinite}
@@ -92,7 +92,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
-  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 19</div>
+  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 20</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
@@ -126,7 +126,7 @@ const DEF={name:'',addMax:10,len:10,sound:true,engine:'chrome',carry:true,hard:0
 const ZERO=()=>({rounds:0,stars:0,best:0,eyes:{r:0,w:0},ears:{r:0,w:0},p:{eyes:{},ears:{}},c:{}});
 let S={...DEF},ST=ZERO();
 try{S={...DEF,...JSON.parse(localStorage.getItem('zz_set')||'{}')};ST={...ST,...JSON.parse(localStorage.getItem('zz_st')||'{}')}}catch(e){}
-ST.c=ST.c||{};ST.p=ST.p||{};ST.p.eyes=ST.p.eyes||{};ST.p.ears=ST.p.ears||{};
+ST.c=ST.c||{};Object.values(ST.c).forEach(c=>Object.values(c.p||{}).forEach(v=>{if(v.h===undefined){v.h=('1'.repeat(v.c||0)+'0'.repeat((v.n||0)-(v.c||0))).slice(-10);delete v.n;delete v.c}}));ST.p=ST.p||{};ST.p.eyes=ST.p.eyes||{};ST.p.ears=ST.p.ears||{};
 const save=()=>{try{localStorage.setItem('zz_set',JSON.stringify(S));localStorage.setItem('zz_st',JSON.stringify(ST))}catch(e){}};
 const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 let ac;function beep(f,d=.15){if(!S.sound)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
@@ -246,17 +246,17 @@ function next(){lock=false;if(i>=S.len)return finish();
   const t=pickTask(),a=t.a,b=t.b;cur={x:a,y:b,a:a+b};asked.add(a+'+'+b);last=a+'+'+b;
   $('cnt').textContent=`⭐ ${i+1}/${S.len}`;$('msg').textContent='';$('tab').style.display='none';
   const ears=mode==='ears';$('rep').style.display=ears?'block':'none';
-  $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;
+  $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;fitQ();
   $('heard').textContent=SR||vOn?'Sag die Lösung, sobald der Knopf orange leuchtet. Wird nichts erkannt, halte den Knopf gedrückt.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';if(engNote){$('heard').textContent=engNote;engNote=''}
   if(micOK===false)warn();if(ears)say();else autoListen()}
 const esc=t=>t.replace(/[&<>]/g,'');
 function hear(label,t){const n=nums(t);return `${label}: „${esc(t)}“`+(n.length&&!/^\s*\d+\s*$/.test(t)?` → <b>${n.join(' / ')}</b>`:'')}
 function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(cur.a));
   const best=alts.find(t=>nums(t).includes(cur.a))||alts.find(t=>nums(t).length)||alts[0];$('heard').innerHTML=hear('Ich habe gehört',best);
-  $('q').innerHTML=`${cur.x} <span>+</span> ${cur.y} <span>=</span> ${cur.a}`;
-  if(good){ok++;streak++;ST.best=Math.max(ST.best,streak);cmb().r++;beep(660);beep(880,.2);$('msg').textContent=['Super! ✨','Toll gezaubert! 🪄','Richtig! ⭐','Wow! 🎉'][R(0,3)]}
-  else{streak=0;cmb().w++;beep(220,.3);$('msg').textContent='Fast! Das nächste schaffst du! 💪'}
-  cmb().t=Date.now();track(cmb().p,cur.x+'+'+cur.y,good);save();adv=setTimeout(()=>{i++;next()},2300)}
+  if(mode!=='ears'){$('q').innerHTML=`${cur.x} <span>+</span> ${cur.y} <span>=</span> ${cur.a}`;fitQ()}
+  if(good){ok++;streak++;ST.best=Math.max(ST.best,streak);cmb().r++;beep(660);beep(880,.2);$('msg').textContent=mode==='ears'?'✅ Richtig!':['Super! ✨','Toll gezaubert! 🪄','Richtig! ⭐','Wow! 🎉'][R(0,3)]}
+  else{streak=0;cmb().w++;beep(220,.3);$('msg').textContent=mode==='ears'?'❌ Falsch':'Fast! Das nächste schaffst du! 💪'}
+  cmb().t=Date.now();track(cmb().p,cur.x+'+'+cur.y,good);save();adv=setTimeout(()=>{i++;next()},mode==='ears'?(good?900:1100):(good?1200:2000))}
 function finish(){
   const p=ok/S.len,st=p>=.9?3:p>=.6?2:1;ST.rounds++;ST.stars+=st;{const C=cmb();C.rounds.push({t:Math.max(1,Math.round((Date.now()-t0)/1000)),ok,n:S.len});if(C.rounds.length>200)C.rounds.shift();C.t=Date.now()}save();
   $('ds').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);$('dp').textContent=`${S.name?S.name+', du':'Du'} hast ${ok} von ${S.len} Aufgaben richtig gelöst.`;
@@ -273,7 +273,7 @@ function hardness(a,b){const ua=a%10,ub=b%10,s=a+b;let d=s/40;
   if(ua===0&&ub===0)d-=2.5;else if(ua===0||ub===0)d-=1;else if(ua+ub===10)d-=.8;
   if(ua===ub&&a<10&&b<10)d-=.8;else if(Math.abs(a-b)===1&&a<10&&b<10)d-=.3;
   return d}
-function snapPool(){hardPool=Object.entries((ST.c[ckey]||{p:{}}).p).filter(([k,v])=>v.n>v.c).map(([k,v])=>{const[a,b]=k.split('+').map(Number);return{a,b,k,w:v.n-v.c}}).filter(o=>okp(o.a,o.b))}
+function snapPool(){hardPool=Object.entries((ST.c[ckey]||{p:{}}).p).filter(([k,v])=>v.h.includes('0')).map(([k,v])=>{const[a,b]=k.split('+').map(Number);return{a,b,k,w:(v.h.match(/0/g)||[]).length}}).filter(o=>okp(o.a,o.b))}
 function pickTask(){const m=S.addMax;
   if(S.hard>0&&Math.random()<S.hard/100){
     const pool=hardPool.filter(o=>!asked.has(o.k));
@@ -283,9 +283,11 @@ function pickTask(){const m=S.addMax;
   for(let t=0;t<3000;t++){const a=R(0,m),b=R(0,m);if(okp(a,b)&&!asked.has(a+'+'+b))return{a,b}}
   for(let t=0;t<3000;t++){const a=R(0,m),b=R(0,m);if(okp(a,b))return{a,b}}
   return{a:1,b:1}}
-function track(P,key,good){const o=P[key]||{n:0,c:0};delete P[key];o.n++;if(good)o.c++;P[key]=o;
-  const all=Object.entries(P).map(([q,v],i)=>({q,i,w:v.n-v.c})),er=all.filter(o=>o.w>0).sort((x,y)=>y.w-x.w||y.i-x.i);
+function track(P,key,good){const o=P[key]||{h:''};delete P[key];o.h=(o.h+(good?'1':'0')).slice(-10);P[key]=o;
+  const all=Object.entries(P).map(([q,v],i)=>({q,i,w:(v.h.match(/0/g)||[]).length})),er=all.filter(o=>o.w>0).sort((x,y)=>y.w-x.w||y.i-x.i);
   er.slice(40).forEach(o=>delete P[o.q]);const okk=all.filter(o=>o.w===0);if(okk.length>400)okk.slice(0,okk.length-300).forEach(o=>delete P[o.q])}
+function fitQ(){const q=$('q');q.style.fontSize='';if(!q.clientWidth)return;const f=parseFloat(getComputedStyle(q).fontSize),av=q.clientWidth-20;if(q.scrollWidth>av)q.style.fontSize=Math.max(24,Math.floor(f*av/q.scrollWidth))+'px'}
+addEventListener('resize',fitQ);
 function bkTap(){if($('home').classList.contains('on'))closeApp();else go('home')}
 function closeApp(){stopAll();vMicStop();window.close();setTimeout(()=>{alert('Zum Beenden bitte die App mit den Handy-Tasten schließen (Zurück-Taste oder App wegwischen).')},400)}
 let ckey='',t0=0;
@@ -304,10 +306,10 @@ function chart(rs){const slots=Math.max(5,Math.ceil(rs.length/5)*5),sw=40,bw=26,
 function renderStats(){$('sS').textContent=ST.stars;$('sR').textContent=ST.rounds;$('sB').textContent=ST.best;
   const cs=Object.entries(ST.c).filter(([k,c])=>c.r+c.w>0||c.rounds.length).sort((x,y)=>y[1].t-x[1].t);
   $('sList').innerHTML=cs.length?cs.map(([k,c])=>{const t=c.r+c.w,p=t?Math.round(c.r/t*100):0;
-    const L=Object.entries(c.p).filter(([,v])=>v.n>v.c).map(([q,v])=>({q,n:v.n,c:v.c,w:v.n-v.c})).sort((x,y)=>y.w-x.w||x.c/x.n-y.c/y.n||y.n-x.n).slice(0,10);
+    const L=Object.entries(c.p).filter(([,v])=>v.h.includes('0')).map(([q,v])=>{const c1=(v.h.match(/1/g)||[]).length;return{q,n:v.h.length,c:c1,w:v.h.length-c1}}).sort((x,y)=>y.w-x.w||x.c/x.n-y.c/y.n||y.n-x.n).slice(0,10);
     return `<div class="cb"><div class="row"><b>${LBL(k)}</b></div><div class="row"><span>${c.r} richtig · ${c.w} falsch (${p} %)</span><span>${c.rounds.length} Runden</span></div><div class="pbar"><i style="width:${p}%"></i></div>`+
     (c.rounds.length?`<div class="cap2">Zeit pro Runde in Sekunden (Linie) · Balken: grün = richtig, rot = falsch</div>${chart(c.rounds)}<div class="cap2" style="text-align:center">Runde</div>`:'')+
-    `<div class="row sub"><span>Häufigste Fehler</span><button class="xb" id="x-${k}" onclick="delErr('${k}')">✕</button></div>`+
+    `<div class="row sub"><span>Häufigste Fehler (letzte 10 Versuche je Aufgabe)</span><button class="xb" id="x-${k}" onclick="delErr('${k}')">✕</button></div>`+
     (L.length?L.map(e=>`<div class="er"><b>${e.q.replace('+',' + ')}</b><span>${e.n}× gezeigt · ${e.c}× richtig</span><em>${Math.round(e.c/e.n*100)} %</em></div>`).join(''):'<div class="er none">Noch keine Fehler 🎉</div>')+'</div>'}).join(''):'<div class="er none">Noch nichts gespielt – starte eine Runde! 🦊</div>';
   document.querySelectorAll('.chart').forEach(e=>{e.scrollLeft=e.scrollWidth})}
 let xArm=null,xT=null;
