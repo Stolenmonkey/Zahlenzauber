@@ -149,9 +149,10 @@ function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classLi
   $('hb').style.display=h?'flex':'none';$('cnt').style.display=v==='ex'?'block':'none';
   if(h)greet();if(v==='stats')renderStats();if(v==='settings')renderSet();$('sc').scrollTop=0}
 function greet(){$('greet').innerHTML=(S.name?`Hallo ${S.name}!<br>`:'')+'Aus Zahlen wird Zauberei.<br>Rechne mit und werde immer besser!'}
-function say(){stopAll();speak(`${cur.x} plus ${cur.y}`)}
+function say(){stopAll();const my=tok;speak(`${cur.x} plus ${cur.y}`,()=>{if(my===tok)setTimeout(()=>{if(my===tok)autoListen()},300)})}
 function replay(){if(!lock&&!holding)say()}
-let pressed=false,retries=0,lastErr='';
+let pressed=false,retries=0,lastErr='',autoUntil=0,autoTries=0;
+function autoListen(){if(!SR||micOK===false||lock||holding)return;autoUntil=Date.now()+8000;autoTries=0;listenNow()}
 function listenNow(){
   try{speechSynthesis.cancel()}catch(_){}
   holding=true;heardAll=[];lastErr='';const my=++tok;rec=new SR();rec.lang='de-DE';rec.interimResults=true;rec.maxAlternatives=5;
@@ -160,7 +161,7 @@ function listenNow(){
   rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
   rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);const h=heardAll.filter(t=>t.trim());
     if(h.length){if(h.some(t=>nums(t).length))judge(h);else $('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
-    if(pressed&&micOK!==false&&lastErr!=='network'&&retries++<3){listenNow();return}
+    if(micOK!==false&&lastErr!=='network'&&((pressed&&retries++<3)||(Date.now()<autoUntil&&autoTries++<6))){listenNow();return}
     if(micOK!==false&&lastErr!=='network')$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'+(lastErr?` (${lastErr})`:'')};
   try{rec.start()}catch(_){holding=false}}
 function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
@@ -176,8 +177,8 @@ function next(){lock=false;if(i>=S.len)return finish();
   $('cnt').textContent=`⭐ ${i+1}/${S.len}`;$('msg').textContent='';$('tab').style.display='none';
   const ears=mode==='ears';$('rep').style.display=ears?'block':'none';
   $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;
-  $('heard').textContent=SR?'Halte den Knopf gedrückt, warte bis er orange leuchtet, dann sag die Lösung.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';
-  if(micOK===false)warn();if(ears)say()}
+  $('heard').textContent=SR?'Sag die Lösung, sobald der Knopf orange leuchtet. Wird nichts erkannt, halte den Knopf gedrückt.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';
+  if(micOK===false)warn();if(ears)say();else autoListen()}
 const esc=t=>t.replace(/[&<>]/g,'');
 function hear(label,t){const n=nums(t);return `${label}: „${esc(t)}“`+(n.length&&!/^\s*\d+\s*$/.test(t)?` → <b>${n.join(' / ')}</b>`:'')}
 function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(cur.a));
