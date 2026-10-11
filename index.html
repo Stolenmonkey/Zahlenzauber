@@ -79,7 +79,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
 </symbol></defs></svg>
 <div id="app">
 <div class="top clear" id="top">
-  <button class="bk" onclick="bkTap()" aria-label="Zurück oder Schließen">✕</button><b id="bt"></b>
+  <button class="bk" id="bk" onclick="bkTap()" aria-label="Zurück oder Schließen">✕</button><b id="bt"></b>
   <span class="rt"><span id="hb"><button class="ib" onclick="go('stats')" aria-label="Statistik">📊</button><button class="ib" onclick="go('settings')" aria-label="Einstellungen">⚙️</button></span><span class="cnt" id="cnt"></span></span>
 </div>
 <div class="scroll" id="sc">
@@ -91,7 +91,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
-  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 16</div>
+  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 17</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
