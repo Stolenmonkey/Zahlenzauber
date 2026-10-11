@@ -58,6 +58,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
 .row.sub{margin-top:4px;font-weight:800}.xb{border:0;border-radius:99px;background:#fff;color:#c24444;font:inherit;font-weight:800;font-size:14px;padding:3px 12px;cursor:pointer}.xb.arm{background:#ff6b6b;color:#fff}
 .er{display:grid;grid-template-columns:76px 1fr auto;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:6px 10px;margin-bottom:5px;font-size:14px}.er b{font-size:18px}.er em{font-style:normal;font-weight:900;color:#c24444}.er.none{display:block;text-align:center}
 .inst{display:none;position:absolute;left:14px;bottom:8px;font-size:13px;font-weight:800;color:var(--blue);cursor:pointer}
+.cb{background:#fff;border-radius:18px;padding:12px;margin-bottom:14px}.cap2{font-size:12px;font-weight:700;opacity:.7;margin:8px 0 2px}.chart{overflow-x:auto;background:#f8f5ff;border-radius:12px;padding:4px}
 .confetti{position:fixed;top:-20px;font-size:28px;pointer-events:none;z-index:9;animation:fall 1.8s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 </style>
@@ -91,7 +92,7 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
-  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 17</div>
+  <div class="inst" id="inst" onclick="install()">📲 Installieren</div><div class="rev">Rev. 19</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
@@ -122,10 +123,10 @@ input[type=range]{width:100%;accent-color:var(--blue);height:34px}.rng{display:f
 <script>
 const $=id=>document.getElementById(id);
 const DEF={name:'',addMax:10,len:10,sound:true,engine:'chrome',carry:true,hard:0};
-const ZERO=()=>({rounds:0,stars:0,best:0,eyes:{r:0,w:0},ears:{r:0,w:0},p:{eyes:{},ears:{}}});
+const ZERO=()=>({rounds:0,stars:0,best:0,eyes:{r:0,w:0},ears:{r:0,w:0},p:{eyes:{},ears:{}},c:{}});
 let S={...DEF},ST=ZERO();
 try{S={...DEF,...JSON.parse(localStorage.getItem('zz_set')||'{}')};ST={...ST,...JSON.parse(localStorage.getItem('zz_st')||'{}')}}catch(e){}
-ST.p=ST.p||{};ST.p.eyes=ST.p.eyes||{};ST.p.ears=ST.p.ears||{};
+ST.c=ST.c||{};ST.p=ST.p||{};ST.p.eyes=ST.p.eyes||{};ST.p.ears=ST.p.ears||{};
 const save=()=>{try{localStorage.setItem('zz_set',JSON.stringify(S));localStorage.setItem('zz_st',JSON.stringify(ST))}catch(e){}};
 const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 let ac;function beep(f,d=.15){if(!S.sound)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
@@ -238,7 +239,7 @@ function vGot(rc,t,fin){if(rc!==vRec||lock||!t)return;t=t.replace(/\[unk\]/g,'')
 function vSettle(rc){if(rc!==vRec)return;const t=vText;vDisarm();judge([t])}
 function vEnd(rc){if(rc!==vRec)return;const t=vText;vDisarm();$('heard').textContent=t?`Ich habe „${t}“ gehört, aber keine Zahl. Versuch es nochmal!`:'Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'}
 function vFinish(rc){if(rc!==vRec)return;nums(vText).length?vSettle(rc):vEnd(rc)}
-function start(m){mode=m;i=0;ok=0;streak=0;engNote='';asked=new Set();last='';go('ex');askMic().then(async g=>{micOK=g;if(!$('ex').classList.contains('on'))return;
+function start(m){mode=m;i=0;ok=0;streak=0;engNote='';asked=new Set();last='';ckey=m+'|plus|'+S.addMax+'|'+(S.addMax>10&&S.carry?1:0);t0=Date.now();snapPool();go('ex');askMic().then(async g=>{micOK=g;if(!$('ex').classList.contains('on'))return;
   if(S.engine==='vosk'&&g){$('heard').textContent='Lade Wortliste … (beim ersten Mal ca. 45 MB)';try{await vLoad();await vMic()}catch(e){vOn=false;engNote='Wortliste nicht verfügbar, es wird die Chrome-Erkennung genutzt. '+(e&&e.message||'')}}
   if(!$('ex').classList.contains('on')){vMicStop();return}next()})}
 function next(){lock=false;if(i>=S.len)return finish();
@@ -253,37 +254,64 @@ function hear(label,t){const n=nums(t);return `${label}: „${esc(t)}“`+(n.len
 function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(cur.a));
   const best=alts.find(t=>nums(t).includes(cur.a))||alts.find(t=>nums(t).length)||alts[0];$('heard').innerHTML=hear('Ich habe gehört',best);
   $('q').innerHTML=`${cur.x} <span>+</span> ${cur.y} <span>=</span> ${cur.a}`;
-  if(good){ok++;streak++;ST.best=Math.max(ST.best,streak);ST[k].r++;beep(660);beep(880,.2);$('msg').textContent=['Super! ✨','Toll gezaubert! 🪄','Richtig! ⭐','Wow! 🎉'][R(0,3)]}
-  else{streak=0;ST[k].w++;beep(220,.3);$('msg').textContent='Fast! Das nächste schaffst du! 💪'}
-  track(k,cur.x+'+'+cur.y,good);save();adv=setTimeout(()=>{i++;next()},2300)}
+  if(good){ok++;streak++;ST.best=Math.max(ST.best,streak);cmb().r++;beep(660);beep(880,.2);$('msg').textContent=['Super! ✨','Toll gezaubert! 🪄','Richtig! ⭐','Wow! 🎉'][R(0,3)]}
+  else{streak=0;cmb().w++;beep(220,.3);$('msg').textContent='Fast! Das nächste schaffst du! 💪'}
+  cmb().t=Date.now();track(cmb().p,cur.x+'+'+cur.y,good);save();adv=setTimeout(()=>{i++;next()},2300)}
 function finish(){
-  const p=ok/S.len,st=p>=.9?3:p>=.6?2:1;ST.rounds++;ST.stars+=st;save();
+  const p=ok/S.len,st=p>=.9?3:p>=.6?2:1;ST.rounds++;ST.stars+=st;{const C=cmb();C.rounds.push({t:Math.max(1,Math.round((Date.now()-t0)/1000)),ok,n:S.len});if(C.rounds.length>200)C.rounds.shift();C.t=Date.now()}save();
   $('ds').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);$('dp').textContent=`${S.name?S.name+', du':'Du'} hast ${ok} von ${S.len} Aufgaben richtig gelöst.`;
   $('again').onclick=()=>start(mode);go('done');
   for(let c=0;c<24;c++){const e=document.createElement('div');e.className='confetti';e.textContent=['⭐','✨','🎉','🪄'][R(0,3)];e.style.left=R(0,95)+'vw';e.style.animationDelay=(Math.random()*.8)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),3000)}}
 const carry=(a,b)=>a%10+b%10>10;
-let asked=new Set(),last='';
-function pickTask(){const m=S.addMax,okp=(a,b)=>a+b<=m&&(S.carry||!carry(a,b));
+let asked=new Set(),last='',hardPool=[];
+const okp=(a,b)=>a+b<=S.addMax&&!(a===0&&b===0)&&(S.carry||!carry(a,b));
+/* Schwierigkeit für Grundschüler: höher = schwerer */
+function hardness(a,b){const ua=a%10,ub=b%10,s=a+b;let d=s/40;
+  if(a===0||b===0)d-=2;else if(a===1||b===1)d-=1;
+  if(a>=10&&b>=10)d+=1.2;else if(a>=10||b>=10)d+=.5;
+  if(carry(a,b))d+=3+(ua+ub-10)*.2+Math.min(ua,ub)*.1;
+  if(ua===0&&ub===0)d-=2.5;else if(ua===0||ub===0)d-=1;else if(ua+ub===10)d-=.8;
+  if(ua===ub&&a<10&&b<10)d-=.8;else if(Math.abs(a-b)===1&&a<10&&b<10)d-=.3;
+  return d}
+function snapPool(){hardPool=Object.entries((ST.c[ckey]||{p:{}}).p).filter(([k,v])=>v.n>v.c).map(([k,v])=>{const[a,b]=k.split('+').map(Number);return{a,b,k,w:v.n-v.c}}).filter(o=>okp(o.a,o.b))}
+function pickTask(){const m=S.addMax;
   if(S.hard>0&&Math.random()<S.hard/100){
-    const pool=Object.entries(ST.p[mode]).filter(([k,v])=>v.n>v.c&&k!==last).map(([k,v])=>{const[a,b]=k.split('+').map(Number);return{a,b,w:v.n-v.c}}).filter(o=>okp(o.a,o.b));
-    if(pool.length){let r=Math.random()*pool.reduce((s,o)=>s+o.w,0);for(const o of pool){r-=o.w;if(r<=0)return o}return pool[pool.length-1]}}
+    const pool=hardPool.filter(o=>!asked.has(o.k));
+    if(pool.length){let r=Math.random()*pool.reduce((s,o)=>s+o.w,0);for(const o of pool){r-=o.w;if(r<=0)return o}return pool[pool.length-1]}
+    let best=null,bs=-99;for(let t=0;t<30;t++){const a=R(0,m),b=R(0,m);if(!okp(a,b)||asked.has(a+'+'+b))continue;const sc=hardness(a,b)+Math.random()*.5;if(sc>bs){bs=sc;best={a,b}}}
+    if(best)return best}
   for(let t=0;t<3000;t++){const a=R(0,m),b=R(0,m);if(okp(a,b)&&!asked.has(a+'+'+b))return{a,b}}
   for(let t=0;t<3000;t++){const a=R(0,m),b=R(0,m);if(okp(a,b))return{a,b}}
   return{a:1,b:1}}
-function track(k,key,good){const P=ST.p[k],o=P[key]||{n:0,c:0};delete P[key];o.n++;if(good)o.c++;P[key]=o;
+function track(P,key,good){const o=P[key]||{n:0,c:0};delete P[key];o.n++;if(good)o.c++;P[key]=o;
   const all=Object.entries(P).map(([q,v],i)=>({q,i,w:v.n-v.c})),er=all.filter(o=>o.w>0).sort((x,y)=>y.w-x.w||y.i-x.i);
   er.slice(40).forEach(o=>delete P[o.q]);const okk=all.filter(o=>o.w===0);if(okk.length>400)okk.slice(0,okk.length-300).forEach(o=>delete P[o.q])}
 function bkTap(){if($('home').classList.contains('on'))closeApp();else go('home')}
 function closeApp(){stopAll();vMicStop();window.close();setTimeout(()=>{alert('Zum Beenden bitte die App mit den Handy-Tasten schließen (Zurück-Taste oder App wegwischen).')},400)}
+let ckey='',t0=0;
+const cmb=()=>ST.c[ckey]||(ST.c[ckey]={t:0,r:0,w:0,rounds:[],p:{}});
+const LBL=k=>{const[m,op,r,c]=k.split('|');return `${m==='eyes'?'👀 Sehen':'👂 Hören'} · Plus · bis ${r}`+(+r>10?(c==='1'?' · mit Zehnerübergang':' · ohne Zehnerübergang'):'')};
+function chart(rs){const slots=Math.max(5,Math.ceil(rs.length/5)*5),sw=40,bw=26,H=180,L=38,T=10,B=24,ph=H-T-B,W=L+slots*sw+8;
+  const mx=Math.max(10,...rs.map(r=>r.t)),stp=[10,20,30,60,120,300,600,1200].find(s=>mx/s<=5)||1200,ym=Math.ceil(mx/stp)*stp;
+  const Y=v=>T+ph-v/ym*ph;let g='',bars='',pts=[],xl='';
+  for(let v=0;v<=ym;v+=stp)g+=`<line x1="${L}" x2="${W-4}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e1d8ff"/><text x="${L-5}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#0b2a6b">${v}</text>`;
+  for(let i=0;i<slots;i++){const cx=L+i*sw+sw/2;xl+=`<text x="${cx}" y="${H-7}" text-anchor="middle" font-size="11" fill="#0b2a6b">${i+1}</text>`;
+    const r=rs[i];if(!r)continue;const h=r.t/ym*ph,gh=h*r.ok/r.n,x=cx-bw/2;
+    bars+=`<rect x="${x}" y="${T+ph-gh}" width="${bw}" height="${gh}" fill="#2fbf71"/>`+(gh<h?`<rect x="${x}" y="${T+ph-h}" width="${bw}" height="${h-gh}" fill="#ff6b6b"/>`:'');
+    pts.push([cx,Y(r.t)])}
+  const line=pts.length?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#0b2a6b" stroke-width="2.5"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#0b2a6b"/>`).join(''):'';
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" style="display:block;width:${slots<=8?'100%':W+'px'}">${g}${bars}${line}${xl}</svg></div>`}
 function renderStats(){$('sS').textContent=ST.stars;$('sR').textContent=ST.rounds;$('sB').textContent=ST.best;
-  const sec=(k,n)=>{const o=ST[k],t=o.r+o.w,p=t?Math.round(o.r/t*100):0;
-    const L=Object.entries(ST.p[k]).filter(([,v])=>v.n>v.c).map(([q,v])=>({q,n:v.n,c:v.c,w:v.n-v.c})).sort((x,y)=>y.w-x.w||x.c/x.n-y.c/y.n||y.n-x.n).slice(0,10);
-    return `<div class="row"><b>${n}</b><span>${o.r} richtig · ${o.w} falsch</span></div><div class="pbar"><i style="width:${p}%"></i></div>`+
+  const cs=Object.entries(ST.c).filter(([k,c])=>c.r+c.w>0||c.rounds.length).sort((x,y)=>y[1].t-x[1].t);
+  $('sList').innerHTML=cs.length?cs.map(([k,c])=>{const t=c.r+c.w,p=t?Math.round(c.r/t*100):0;
+    const L=Object.entries(c.p).filter(([,v])=>v.n>v.c).map(([q,v])=>({q,n:v.n,c:v.c,w:v.n-v.c})).sort((x,y)=>y.w-x.w||x.c/x.n-y.c/y.n||y.n-x.n).slice(0,10);
+    return `<div class="cb"><div class="row"><b>${LBL(k)}</b></div><div class="row"><span>${c.r} richtig · ${c.w} falsch (${p} %)</span><span>${c.rounds.length} Runden</span></div><div class="pbar"><i style="width:${p}%"></i></div>`+
+    (c.rounds.length?`<div class="cap2">Zeit pro Runde in Sekunden (Linie) · Balken: grün = richtig, rot = falsch</div>${chart(c.rounds)}<div class="cap2" style="text-align:center">Runde</div>`:'')+
     `<div class="row sub"><span>Häufigste Fehler</span><button class="xb" id="x-${k}" onclick="delErr('${k}')">✕</button></div>`+
-    (L.length?L.map(e=>`<div class="er"><b>${e.q.replace('+',' + ')}</b><span>${e.n}× gezeigt · ${e.c}× richtig</span><em>${Math.round(e.c/e.n*100)} %</em></div>`).join(''):'<div class="er none">Noch keine Fehler 🎉</div>')+'<div style="height:12px"></div>'};
-  $('sList').innerHTML=sec('eyes','👀 Sehen')+sec('ears','👂 Hören')}
+    (L.length?L.map(e=>`<div class="er"><b>${e.q.replace('+',' + ')}</b><span>${e.n}× gezeigt · ${e.c}× richtig</span><em>${Math.round(e.c/e.n*100)} %</em></div>`).join(''):'<div class="er none">Noch keine Fehler 🎉</div>')+'</div>'}).join(''):'<div class="er none">Noch nichts gespielt – starte eine Runde! 🦊</div>';
+  document.querySelectorAll('.chart').forEach(e=>{e.scrollLeft=e.scrollWidth})}
 let xArm=null,xT=null;
-function delErr(k){const b=$('x-'+k);if(xArm===k){clearTimeout(xT);xArm=null;ST.p[k]={};save();renderStats();return}
+function delErr(k){const b=$('x-'+k);if(xArm===k){clearTimeout(xT);xArm=null;ST.c[k].p={};save();renderStats();return}
   xArm=k;b.classList.add('arm');b.textContent='Nochmal tippen zum Löschen';clearTimeout(xT);xT=setTimeout(()=>{xArm=null;renderStats()},3000)}
 function resetStats(){if(confirm('Statistik wirklich löschen?')){ST=ZERO();save();renderStats()}}
 function chips(el,items,isOn,click){$(el).innerHTML='';items.forEach(([l,v])=>{const b=document.createElement('button');b.className='chip'+(isOn(v)?' on':'');b.textContent=l;b.onclick=()=>{click(v);save();renderSet()};$(el).appendChild(b)})}
