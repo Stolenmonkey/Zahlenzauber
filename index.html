@@ -122,8 +122,14 @@ const ON={null:0,eins:1,ein:1,eine:1,zwei:2,zwo:2,drei:3,vier:4,fuenf:5,sechs:6,
 const TE={zwanzig:20,dreissig:30,vierzig:40,fuenfzig:50,sechzig:60,siebzig:70,achtzig:80,neunzig:90};
 function wnum(w){if(has(ON,w))return ON[w];if(has(TE,w))return TE[w];const k=w.indexOf('und');
   if(k>0&&has(ON,w.slice(0,k))&&has(TE,w.slice(k+3))&&ON[w.slice(0,k)]>0)return ON[w.slice(0,k)]+TE[w.slice(k+3)];return null}
+const AL={sex:6,seks:6,zechs:6,six:6,sechse:6,swei:2,zwoe:2,two:2,dry:3,three:3,drai:3,fier:4,fuer:4,four:4,finf:5,five:5,seven:7,eight:8,echt:8,nine:9,neu:9,noin:9,zen:10,sehen:10,zeh:10,zehen:10,ten:10,one:1,eis:1,eines:1};
+function lev(a,b){const m=[];for(let i=0;i<=a.length;i++)m[i]=[i];for(let j=1;j<=b.length;j++)m[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
+function fuzzy(w){if(w.length<4)return null;const hit=new Set();
+  for(const o of [ON,TE])for(const k in o)if(k!=='ein'&&k!=='eine'&&Math.abs(k.length-w.length)<=1&&lev(w,k)<=1)hit.add(o[k]);
+  return hit.size===1?[...hit][0]:null}
 function nums(t){t=t.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/\s+und\s+/g,'und');
-  const r=(t.match(/\d+/g)||[]).map(Number);t.split(/[^a-z]+/).forEach(w=>{if(!w)return;const n=wnum(w);if(n!==null)r.push(n)});return r}
+  const r=(t.match(/\d+/g)||[]).map(Number);t.split(/[^a-z]+/).forEach(w=>{if(!w)return;let n=wnum(w);if(n===null)n=has(AL,w)?AL[w]:fuzzy(w);if(n!==null)r.push(n)});return r}
 
 
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -148,9 +154,9 @@ function replay(){if(!lock&&!holding)say()}
 let pressed=false,retries=0,lastErr='';
 function listenNow(){
   try{speechSynthesis.cancel()}catch(_){}
-  holding=true;heardAll=[];lastErr='';const my=++tok;rec=new SR();rec.lang='de-DE';rec.interimResults=true;rec.maxAlternatives=3;
+  holding=true;heardAll=[];lastErr='';const my=++tok;rec=new SR();rec.lang='de-DE';rec.interimResults=true;rec.maxAlternatives=5;
   rec.onaudiostart=()=>{if(my===tok){micState(true);$('heard').textContent='Jetzt sprechen! 🎙️'}};
-  rec.onresult=ev=>{if(my===tok)heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript))};
+  rec.onresult=ev=>{if(my!==tok)return;heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript));const l=ev.results[ev.results.length-1][0].transcript;if(l.trim())$('heard').innerHTML=hear('Ich höre',l)};
   rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
   rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);const h=heardAll.filter(t=>t.trim());
     if(h.length){if(h.some(t=>nums(t).length))judge(h);else $('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
@@ -172,8 +178,10 @@ function next(){lock=false;if(i>=S.len)return finish();
   $('q').innerHTML=ears?'👂':`${a} <span>+</span> ${b} <span>=</span> ?`;
   $('heard').textContent=SR?'Halte den Knopf gedrückt, warte bis er orange leuchtet, dann sag die Lösung.':'Dieser Browser kann nicht zuhören. Bitte Chrome benutzen.';
   if(micOK===false)warn();if(ears)say()}
+const esc=t=>t.replace(/[&<>]/g,'');
+function hear(label,t){const n=nums(t);return `${label}: „${esc(t)}“`+(n.length&&!/^\s*\d+\s*$/.test(t)?` → <b>${n.join(' / ')}</b>`:'')}
 function judge(alts){lock=true;const k=mode,good=alts.some(t=>nums(t).includes(cur.a));
-  $('heard').textContent='Ich habe gehört: „'+alts[0]+'“';
+  const best=alts.find(t=>nums(t).includes(cur.a))||alts.find(t=>nums(t).length)||alts[0];$('heard').innerHTML=hear('Ich habe gehört',best);
   $('q').innerHTML=`${cur.x} <span>+</span> ${cur.y} <span>=</span> ${cur.a}`;
   if(good){ok++;streak++;ST.best=Math.max(ST.best,streak);ST[k].r++;beep(660);beep(880,.2);$('msg').textContent=['Super! ✨','Toll gezaubert! 🪄','Richtig! ⭐','Wow! 🎉'][R(0,3)]}
   else{streak=0;ST[k].w++;beep(220,.3);$('msg').textContent='Fast! Das nächste schaffst du! 💪'}
