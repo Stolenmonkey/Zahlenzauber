@@ -8,7 +8,7 @@
 :root{--navy:#0b2a6b;--blue:#1f6fd1;--bar:#3d84d6;--green:#2f9e44;--ok:#2fbf71;--bad:#ff6b6b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;height:100vh;height:100dvh;background:#8cc7f0;font-family:"Nunito","Trebuchet MS",system-ui,sans-serif;color:var(--navy)}
-#app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:linear-gradient(#bfe6fb,#e6f5ff 70%);overflow:hidden}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:linear-gradient(#bfe6fb,#e6f5ff 70%);overflow:hidden}
 .top{flex:none;display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--bar);border-bottom:3px solid #2f6fb9;color:#fff;font-size:22px;font-weight:800;min-height:68px}
 .top.clear{background:none;border:0}.top b{flex:1;text-align:center}
 .bk{border:0;background:none;color:#fff;font-size:32px;width:44px;cursor:pointer}.top.clear .bk{visibility:hidden}
@@ -50,6 +50,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{--c:#f7a6a6;min-width:60px;border:0;border-radius:14px;padding:12px 18px;font:inherit;font-size:22px;font-weight:900;color:var(--navy);background:var(--c);opacity:.45;cursor:pointer}
 .chip.on{opacity:1;box-shadow:0 4px 0 #0003}.chip:nth-child(2){--c:#f9d56e}.chip:nth-child(3){--c:#9ddc9a}.chip:nth-child(4){--c:#8fd0f3}
+.rev{position:absolute;right:14px;bottom:8px;font-size:12px;font-weight:700;color:var(--navy);opacity:.55}
 .confetti{position:fixed;top:-20px;font-size:28px;pointer-events:none;z-index:9;animation:fall 1.8s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 </style>
@@ -83,6 +84,7 @@ input[type=text]{width:100%;padding:12px 14px;font:inherit;font-size:20px;border
     </div>
     <div class="grass"><i>📚</i><svg viewBox="0 0 100 100"><use href="#fox"/></svg></div>
   </div>
+  <div class="rev">Rev. 11</div>
 </section>
 <section class="view" id="ex">
   <div class="q" id="q"></div>
@@ -143,7 +145,7 @@ const FRAMED=window.self!==window.top,TITLES={stats:'Meine Statistik',settings:'
 async function askMic(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop());return true}catch(e){return false}}
 function warn(){$('heard').textContent=!window.isSecureContext?'Chrome erlaubt das Mikrofon nur auf https-Webseiten, nicht bei lokal geöffneten Dateien.':FRAMED?'Das Mikrofon ist in diesem Fenster gesperrt. Bitte die App in einem neuen Tab öffnen.':'Bitte erlaube das Mikrofon (Schloss-Symbol neben der Adresse) und halte dann den Knopf gedrückt.';$('tab').style.display=FRAMED?'block':'none'}
 function micState(on){$('mic').classList.toggle('on',on);$('mt').textContent=on?'Ich höre zu …':'Halten & sprechen'}
-function stopAll(){tok++;holding=false;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}micState(false)}
+function stopAll(){tok++;clearTimeout(numT);holding=false;clearTimeout(adv);try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}micState(false)}
 function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));$(v).classList.add('on');
   const h=v==='home';$('top').className='top'+(h?' clear':'');$('bt').textContent=h?'':v==='ex'?'Runde '+(ST.rounds+1):TITLES[v];
   $('hb').style.display=h?'flex':'none';$('cnt').style.display=v==='ex'?'block':'none';
@@ -151,17 +153,20 @@ function go(v){stopAll();document.querySelectorAll('.view').forEach(e=>e.classLi
 function greet(){$('greet').innerHTML=(S.name?`Hallo ${S.name}!<br>`:'')+'Aus Zahlen wird Zauberei.<br>Rechne mit und werde immer besser!'}
 function say(){stopAll();const my=tok;speak(`${cur.x} plus ${cur.y}`,()=>{if(my===tok)setTimeout(()=>{if(my===tok)autoListen()},300)})}
 function replay(){if(!lock&&!holding)say()}
-let pressed=false,retries=0,lastErr='',autoUntil=0,autoTries=0;
+let pressed=false,retries=0,lastErr='',autoUntil=0,autoTries=0,numT=null;
 function autoListen(){if(!SR||micOK===false||lock||holding)return;autoUntil=Date.now()+8000;autoTries=0;listenNow()}
+function settle(my){if(my!==tok)return;tok++;holding=false;try{rec.abort()}catch(_){}micState(false);judge(heardAll.filter(t=>t.trim()))}
 function listenNow(){
   try{speechSynthesis.cancel()}catch(_){}
-  holding=true;heardAll=[];lastErr='';const my=++tok;rec=new SR();rec.lang='de-DE';rec.interimResults=true;rec.maxAlternatives=5;
+  holding=true;heardAll=[];lastErr='';clearTimeout(numT);const my=++tok;rec=new SR();rec.lang='de-DE';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=5;
   rec.onaudiostart=()=>{if(my===tok){micState(true);$('heard').textContent='Jetzt sprechen! 🎙️'}};
-  rec.onresult=ev=>{if(my!==tok)return;heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript));const l=ev.results[ev.results.length-1][0].transcript;if(l.trim())$('heard').innerHTML=hear('Ich höre',l)};
+  rec.onresult=ev=>{if(my!==tok)return;heardAll=[...ev.results].flatMap(r=>[...r].map(a=>a.transcript));const l=ev.results[ev.results.length-1][0].transcript;if(l.trim())$('heard').innerHTML=hear('Ich höre',l);
+    clearTimeout(numT);if(heardAll.some(t=>nums(t).length))numT=setTimeout(()=>settle(my),1000)};
   rec.onerror=ev=>{if(my!==tok)return;lastErr=ev.error;if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micOK=false;warn()}else if(ev.error==='network')$('heard').textContent='Die Spracherkennung braucht Internet.'};
-  rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);const h=heardAll.filter(t=>t.trim());
-    if(h.length){if(h.some(t=>nums(t).length))judge(h);else $('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
+  rec.onend=()=>{if(my!==tok)return;holding=false;micState(false);clearTimeout(numT);const h=heardAll.filter(t=>t.trim());
+    if(h.some(t=>nums(t).length)){judge(h);return}
     if(micOK!==false&&lastErr!=='network'&&((pressed&&retries++<3)||(Date.now()<autoUntil&&autoTries++<6))){listenNow();return}
+    if(h.length){$('heard').textContent=`Ich habe „${h[0]}“ gehört, aber keine Zahl. Versuch es nochmal!`;return}
     if(micOK!==false&&lastErr!=='network')$('heard').textContent='Ich habe nichts gehört. Halte den Knopf gedrückt, bis du fertig bist.'+(lastErr?` (${lastErr})`:'')};
   try{rec.start()}catch(_){holding=false}}
 function startHold(e){e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
